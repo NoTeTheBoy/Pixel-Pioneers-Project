@@ -1,26 +1,30 @@
 
 (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
-    key: "AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE",
-    v: "weekly",
-    // Use the 'v' parameter to indicate the version to use (weekly, beta, alpha, etc.).
-    // Add other bootstrap parameters as needed, using camel case.
-  });
+  key: "AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE",
+  v: "weekly",
+  // Use the 'v' parameter to indicate the version to use (weekly, beta, alpha, etc.).
+  // Add other bootstrap parameters as needed, using camel case.
+});
 console.log("test1");
-    
-const mapContainer = document.getElementById("map");
-const inputBox = document.getElementById("search-bar");
-const directionsButton = document.getElementById("directions-button");
+
 const {Map} = await google.maps.importLibrary("maps");
 const {SearchBox} = await google.maps.importLibrary("places");
 const {AdvancedMarkerElement} = await google.maps.importLibrary("marker");
 const {DirectionsService} = await google.maps.importLibrary("routes");
 const {TravelMode} = await google.maps.importLibrary("routes")
+const mapContainer = document.getElementById("map");
+const inputBox = document.getElementById("search-bar");
+const directionsButton = document.getElementById("directions-button");
+const originInput = document.getElementById("origin-input");
+const originSearchBox = new google.maps.places.SearchBox(originInput);
+const destinationInput = document.getElementById("destination-input");
+const destinationSearchBox = new google.maps.places.SearchBox(destinationInput);
 
-    // Note: This example requires that you consent to location sharing when
-    // prompted by your browser. If you see the error "The Geolocation service
-    // failed.", it means you probably did not give permission for the browser to
+// Note: This example requires that you consent to location sharing when
+// prompted by your browser. If you see the error "The Geolocation service
+// failed.", it means you probably did not give permission for the browser to
     // locate you.
-let map, infoWindow;
+let map, infoWindow, directionsService, directionsRenderer;
 
 function initMap() {
   map = new google.maps.Map(mapContainer, {
@@ -71,10 +75,6 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
       infoWindow.open(map);
 }    
     
-const originInput = document.getElementById("origin-input");
-const originSearchBox = new google.maps.places.SearchBox(originInput);
-const destinationInput = document.getElementById("destination-input");
-const destinationSearchBox = new google.maps.places.SearchBox(destinationInput);
 
 function initAutocomplete() {
     // Create the search box and link it to the UI element.
@@ -100,7 +100,6 @@ function initAutocomplete() {
         if (places.length == 0) {
             return;
         }
-        
         // Clear out the old markers.
         originMarkers.forEach((marker) => {
             marker.setMap(null);
@@ -192,21 +191,31 @@ function initAutocomplete() {
     });
 }
 
-let directions;
-
 function GetDirections() {
-     directions = new google.maps.DirectionsService();
-     console.log(navigator.geolocation)
-     const places = originSearchBox.getPlaces()
-     const orig = google.maps.places.PlaceResult; 
-     const destinationResult = destinationSearchBox.getPlaces()
+  console.log('Test GetDirections');
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer();
+  directionsRenderer.setMap(map)
+  let directions;
 
-  const directionsRequest = {
-          origin: originResult.place,
-          destination: destinationSearchBox,
-          travelMode: google.maps.TravelMode.WALKING,
+  const request = {
+          origin: originInput.value,
+          destination: destinationInput.value,
+          travelMode: 'WALKING'
+        }
+
+
+ directionsService.route(request, function(result, status){
+    if (status === "OK"){
+      directionsRenderer.setDirections(result);
+      const {geocoded_waypoints, request, routes, status} = result  
+      console.log(routes);
+      return directions = result;
     }
- directions.route(directionsRequest)
+    else console.log('Error');
+
+ })
+
      // window.initMap = initMap;
      }
  directionsButton.onclick = () => {
