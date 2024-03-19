@@ -189,7 +189,12 @@ function initAutocomplete() {
       });
       map.fitBounds(bounds);
     });
-}
+  }
+  
+const fetchConfig = async () => {
+    const response = await fetch(`https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/directions/json?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
+    return await response.json();
+  }
 
 function GetDirections() {
   console.log('Test GetDirections');
@@ -204,20 +209,27 @@ function GetDirections() {
           travelMode: 'WALKING'
         }
 
-
  directionsService.route(request, function(result, status){
     if (status === "OK"){
       directionsRenderer.setDirections(result);
-      const {geocoded_waypoints, request, routes, status} = result  
-      console.log(routes);
+      // const {geocoded_waypoints, request, routes, status} = result;
+      // console.log(routes);
+      // const route = routes[0];
+      // const {legs} = route;
+      // const leg = legs[0]
+      // const {steps} = leg
+      // const step0 = steps[0]
+      // const {end_location} = step0
+      // console.log(end_location);
       return directions = result;
     }
     else console.log('Error');
+    })
 
- })
+    console.log(fetchConfig());
 
      // window.initMap = initMap;
-     }
+  }
  directionsButton.onclick = () => {
      GetDirections()
  }
