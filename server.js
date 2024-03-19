@@ -1,3 +1,6 @@
+const destinationInput = document.getElementById("destination-input");
+const originInput = document.getElementById("origin-input");
+
 const express = require('express');
 const request = require('request');
 
