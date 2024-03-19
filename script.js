@@ -192,7 +192,7 @@ function initAutocomplete() {
   }
   
 const fetchConfig = async () => {
-    const response = await fetch(`https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/directions/json?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
+    const response = await fetch(`https://maps.googleapis.com/maps/api/directions/json?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
     return await response.json();
   }
 
