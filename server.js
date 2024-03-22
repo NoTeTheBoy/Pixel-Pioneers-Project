@@ -1,6 +1,3 @@
-const destinationInput = document.getElementById("destination-input");
-const originInput = document.getElementById("origin-input");
-
 const express = require('express');
 const request = require('request');
 
@@ -11,9 +8,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get(`/maps/api/directions/json?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`, (req, res) => {
+app.get('/route', (req, res) => {
+  const [first,second, third, fourth, fifth, sixth, ...parameters] = req.originalUrl
+  const parameter = parameters.join('')
+  //console.log(parameter);
   request(
-    {url: `https://maps.googleapis.com/maps/api/directions/json?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`},
+    {url: `https://maps.googleapis.com/maps/api/directions/json${parameter}`},
     (error, response, body) => {
       if (error || response.statusCode !== 200) {
         return res.status(500).json({ type: 'error', message: err.message });
@@ -24,5 +24,5 @@ app.get(`/maps/api/directions/json?destination=${destinationInput.value}&mode=wa
 });
 
 
-const PORT = process.env.PORT || 5500;
+const PORT = process.env.PORT || 5501;
 app.listen(PORT, () => console.log(`listening on ${PORT}`));

@@ -192,11 +192,11 @@ function initAutocomplete() {
   }
   
 const fetchConfig = async () => {
-    const response = await fetch(`https://maps.googleapis.com/maps/api/directions/json?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
+    const response = await fetch(`http://127.0.0.1:5501/route?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
     return await response.json();
   }
 
-function GetDirections() {
+async function GetDirections() {
   console.log('Test GetDirections');
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer();
@@ -226,7 +226,25 @@ function GetDirections() {
     else console.log('Error');
     })
 
-    console.log(fetchConfig());
+    const data = await fetchConfig()
+    const steps = data.routes[0].legs[0].steps
+    console.log(steps)
+    let stepData = []
+    for (let i = 0; i < steps.length; i++){
+      const lat = steps[i].end_location.lat
+      const lng = steps[i].end_location.lng
+      const prop = 'maneuver'
+      let maneuver
+      if (steps[i].hasOwnProperty(prop)) {
+        maneuver = steps[i].maneuver
+      }
+      else {
+        maneuver = undefined;
+      }
+      stepData.push({lat: lat, lng: lng, maneuver: maneuver})
+    }
+    console.log(stepData)
+    
 
      // window.initMap = initMap;
   }
