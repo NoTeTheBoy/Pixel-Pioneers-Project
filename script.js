@@ -15,6 +15,7 @@ const {TravelMode} = await google.maps.importLibrary("routes")
 const mapContainer = document.getElementById("map");
 const inputBox = document.getElementById("search-bar");
 const directionsButton = document.getElementById("directions-button");
+const CancelDirectionsButton = document.getElementById("cancel-directions");
 const originInput = document.getElementById("origin-input");
 const originSearchBox = new google.maps.places.SearchBox(originInput);
 const destinationInput = document.getElementById("destination-input");
@@ -24,7 +25,7 @@ const destinationSearchBox = new google.maps.places.SearchBox(destinationInput);
 // prompted by your browser. If you see the error "The Geolocation service
 // failed.", it means you probably did not give permission for the browser to
     // locate you.
-let map, infoWindow, directionsService, directionsRenderer;
+let map, infoWindow, directionsService, directionsRenderer, gettingDirections;
 
 function initMap() {
   map = new google.maps.Map(mapContainer, {
@@ -190,6 +191,54 @@ function initAutocomplete() {
       map.fitBounds(bounds);
     });
   }
+
+CancelDirectionsButton.onclick = () => {
+  gettingDirections = false
+}
+
+function WaitForDirections(data, step = 0){
+  if (!gettingDirections) return;
+  if (data[step] === undefined) return;
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              };
+              
+              const origin = new google.maps.LatLng(pos.lat, pos.lng);
+              const destination = new google.maps.LatLng(data[step].lat, data[step].lng);
+              const service = new google.maps.DistanceMatrixService();
+              service.getDistanceMatrix(
+                {
+                  origins: [origin],
+                  destinations: [destination],
+                  travelMode: 'WALKING'
+                }, (result, status) => {
+                  if (status === 'OK'){
+                    const distance = result.rows[0].elements[0].distance;
+                    if (distance.value < 10){
+                      console.log(data[step].maneuver);
+                      console.log('next step');
+                      WaitForDirections(data, step + 1)
+                    }
+                    else {
+                      console.log('try again')
+                      setTimeout(() => {WaitForDirections(data, step)}, 5000)
+                    }
+                  }
+                }
+              )
+          },
+          () => {
+          },
+          );
+      } else {
+          // Browser doesn't support Geolocation
+          console.log('no geolocation')
+      }
+}
   
 const fetchConfig = async () => {
     const response = await fetch(`http://127.0.0.1:5501/route?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
@@ -197,6 +246,7 @@ const fetchConfig = async () => {
   }
 
 async function GetDirections() {
+  gettingDirections = true
   console.log('Test GetDirections');
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer();
@@ -245,6 +295,7 @@ async function GetDirections() {
     }
     console.log(stepData)
     
+    WaitForDirections(stepData);
 
      // window.initMap = initMap;
   }
