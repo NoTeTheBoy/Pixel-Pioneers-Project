@@ -15,17 +15,42 @@ const {TravelMode} = await google.maps.importLibrary("routes")
 const mapContainer = document.getElementById("map");
 const inputBox = document.getElementById("search-bar");
 const directionsButton = document.getElementById("directions-button");
-const CancelDirectionsButton = document.getElementById("cancel-directions");
+const cancelDirectionsButton = document.getElementById("cancel-directions");
 const originInput = document.getElementById("origin-input");
 const originSearchBox = new google.maps.places.SearchBox(originInput);
 const destinationInput = document.getElementById("destination-input");
 const destinationSearchBox = new google.maps.places.SearchBox(destinationInput);
+const connectButton = document.getElementById('connect-ble-button');
+const disconnectButton = document.getElementById('disconnect-ble-button');
+const onButton = document.getElementById('on-button');
+const textField = document.getElementById('text-field');
+const latestValueSent = document.getElementById('value-sent');
+const bleStateContainer = document.getElementById('ble-state');
 
+const directionDictionary = {
+  "TURN_LEFT": 1,
+  "TURN_SLIGHT_LEFT": 2,
+  "TURN-SHARP_LEFT": 3,
+  "FORK_LEFT": 4,
+  "TURN_RIGHT": 5,
+  "TURN_SLIGHT_RIGHT": 6,
+  "TURN_SHARP_RIGHT": 7,
+  "FORK_RIGHT": 8,
+  "STRAIGHT": 9
+}
 // Note: This example requires that you consent to location sharing when
 // prompted by your browser. If you see the error "The Geolocation service
 // failed.", it means you probably did not give permission for the browser to
     // locate you.
 let map, infoWindow, directionsService, directionsRenderer, gettingDirections;
+
+let deviceName = 'ESP32';
+let bleService = '19b10000-e8f2-537e-4f6c-d104768a1214';
+let ledCharacteristic = '19b10002-e8f2-537e-4f6c-d104768a1214';
+let sensorCharacteristic = '19b10001-e8f2-537e-4f6c-d104768a1214'
+let bleServer;
+let bleServiceFound;
+let sensorCharacteristicFound;
 
 function initMap() {
   map = new google.maps.Map(mapContainer, {
@@ -192,8 +217,130 @@ function initAutocomplete() {
     });
   }
 
-CancelDirectionsButton.onclick = () => {
+cancelDirectionsButton.onclick = () => {
   gettingDirections = false
+}
+
+function isWebBluetoothEnabled() {
+  if (!navigator.bluetooth) {
+    console.log("Web Bluetooth API is not available in this browser!");
+    bleStateContainer.innerHTML = "Web Bluetooth API is not available in this browser/device!";
+    return false
+  }
+  console.log('Web Bluetooth API supported in this browser.');
+  return true
+}
+
+function connectToDevice() {
+  navigator.bluetooth.requestDevice({
+    filters: [{name: deviceName}],
+    optionalServices: [bleService]
+})
+.then(device => {
+  console.log('Device Selected:', device.name);
+  bleStateContainer.innerHTML = 'Connected to device ' + device.name;
+  bleStateContainer.style.color = "#24af37";
+  device.addEventListener('gattservicedisconnected', onDisconnected);
+  return device.gatt.connect();
+})
+.then(gattServer => {
+  bleServer = gattServer;
+  console.log("Connected to GATT Server");
+  return bleServer.getPrimaryService(bleService);
+})
+.then(service => {
+  bleServiceFound = service;
+  console.log("Service discovered:", service.uuid);
+  return service.getCharacteristic(sensorCharacteristic);
+})
+.then(characteristic => {
+  console.log("Characteristic discovered:", characteristic.uuid);
+  sensorCharacteristicFound = characteristic;
+  //characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
+  characteristic.startNotifications();
+  console.log("Notifications Started.");
+  return characteristic.readValue();
+})
+.then(value => {
+  // console.log("Read value: ", value);
+  // const decodedValue = new TextDecoder().decode(value);
+  // console.log("Decoded value: ", decodedValue);
+  // retrievedValue.innerHTML = decodedValue;
+})
+}
+
+function onDisconnected(event){
+  console.log('Device Disconnected:', event.target.device.name);
+  bleStateContainer.innerHTML = "Device disconnected";
+  bleStateContainer.style.color = "#d13a30";
+
+  connectToDevice();
+}
+
+// function handleCharacteristicChange(event){
+//   const newValueReceived = new TextDecoder().decode(event.target.value);
+//   console.log("Characteristic value changed: ", newValueReceived);
+//   retrievedValue.innerHTML = newValueReceived;
+// }
+
+function writeOnCharacteristic(value){
+  if (bleServer && bleServer.connected) {
+    bleServiceFound.getCharacteristic(ledCharacteristic)
+     .then(characteristic => {
+        console.log("Found the LED characteristic: ", characteristic.uuid);
+        const data = new Uint8Array([value]);
+        return characteristic.writeValue(data);
+      })
+      .then(() => {
+        latestValueSent.innerHTML = value;
+        console.log("Value written to LEDcharacteristic:", value);
+    })
+  } else {
+    console.error ("Bluetooth is not connected. Cannot write to characteristic.")
+    window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+}
+}
+
+function disconnectDevice() {
+  console.log("Disconnect Device.");
+  if (bleServer && bleServer.connected) {
+      if (sensorCharacteristicFound) {
+          sensorCharacteristicFound.stopNotifications()
+              .then(() => {
+                  console.log("Notifications Stopped");
+                  return bleServer.disconnect();
+              })
+              .then(() => {
+                  console.log("Device Disconnected");
+                  bleStateContainer.innerHTML = "Device Disconnected";
+                  bleStateContainer.style.color = "#d13a30";
+
+              })
+              .catch(error => {
+                  console.log("An error occurred:", error);
+              });
+      } else {
+          console.log("No characteristic found to disconnect.");
+      }
+  } else {
+      // Throw an error if Bluetooth is not connected
+      console.error("Bluetooth is not connected.");
+      window.alert("Bluetooth is not connected.")
+  }
+}
+
+connectButton.onclick = () => {
+  if (isWebBluetoothEnabled()){
+    connectToDevice();
+  }
+}
+
+disconnectButton.onclick = () => {
+  disconnectDevice();
+}
+
+onButton.onclick = () => {
+  writeOnCharacteristic(textField.value);
 }
 
 function WaitForDirections(data, step = 0){
@@ -220,6 +367,12 @@ function WaitForDirections(data, step = 0){
                     const distance = result.rows[0].elements[0].distance;
                     if (distance.value < 10){
                       console.log(data[step].maneuver);
+                      console.log(directionDictionary[data[step].maneuver]);
+                      if (data[step].maneuver === undefined) {
+                        writeOnCharacteristic(0);
+                      } else {
+                        writeOnCharacteristic(directionDictionary[data[step].maneuver]);
+                      }
                       console.log('next step');
                       WaitForDirections(data, step + 1)
                     }
@@ -241,7 +394,7 @@ function WaitForDirections(data, step = 0){
 }
   
 const fetchConfig = async () => {
-    const response = await fetch(`http://127.0.0.1:5501/route?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
+    const response = await fetch(`https://notegot.dk/route?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
     return await response.json();
   }
 

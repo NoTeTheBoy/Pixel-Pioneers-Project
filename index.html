@@ -9,6 +9,17 @@
 </head>
 <body>
     <header>
+        <div class="connect-container">
+            <button id="connect-ble-button">Connect to BLE Device</button>
+            <button id="disconnect-ble-button">Disconnect BLE Device</button>
+        </div>
+        <p>BLE state: <strong><span id="ble-state">Disconnected</span></strong></p>
+        </div>
+        <div class="on-off-container">
+            <button id="on-button">Send</button>
+            <input type="text" id="text-field" placeholder="type here"></input>
+        </div>
+        <p>Last value sent: <span id="value-sent"></span></p>
     </header>
     <nav>
         <div class="input-container">

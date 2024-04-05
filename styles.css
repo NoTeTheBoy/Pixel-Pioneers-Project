@@ -23,10 +23,59 @@ body {
 
 
     > header {
-        display: flex;
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-columns: auto;
         grid-area: header;
         height: var(--headerHeight);
-        background-color: black;
+        background-color: gray;
+        
+        p {
+            margin: 0;
+            padding-top: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+            justify-content: start;
+        }
+        
+        > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            padding-top: 5px;
+        }
+
+        .connect-container {
+            gap: 5px;
+            button {
+                border: 0;
+                padding: 0;
+                width: 6.2em;
+                border-radius: 0.3em;
+            }        
+        }
+
+        .value-container {
+            align-items: start;
+            padding-top: 5px;
+
+            h2 {
+                margin: 0;
+                font-size: large;
+            }
+        }
+
+        .on-off-container {
+            gap: 5px;
+            button {
+                width: 3rem;
+
+            }
+        }
+
+
     }
 
     > nav {
