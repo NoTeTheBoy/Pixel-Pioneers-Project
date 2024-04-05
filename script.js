@@ -44,13 +44,21 @@ const directionDictionary = {
     // locate you.
 let map, infoWindow, directionsService, directionsRenderer, gettingDirections;
 
-let deviceName = 'ESP32';
-let bleService = '19b10000-e8f2-537e-4f6c-d104768a1214';
-let ledCharacteristic = '19b10002-e8f2-537e-4f6c-d104768a1214';
-let sensorCharacteristic = '19b10001-e8f2-537e-4f6c-d104768a1214'
-let bleServer;
-let bleServiceFound;
-let sensorCharacteristicFound;
+let firstDeviceName = 'ESP32';
+let firstBleService = '19b10000-e8f2-537e-4f6c-d104768a1214';
+let firstLedCharacteristic = '19b10002-e8f2-537e-4f6c-d104768a1214';
+let firstSensorCharacteristic = '19b10001-e8f2-537e-4f6c-d104768a1214';
+let firstBleServer;
+let firstBleServiceFound;
+let firstSensorCharacteristicFound;
+let secondDeviceName = 'ESP33';
+let secondBleService = '19b10003-e8f2-537e-4f6c-d104768a1214';
+let secondLedCharacteristic = '19b10005-e8f2-537e-4f6c-d104768a1214';
+let secondSensorCharacteristic = '19b10004-e8f2-537e-4f6c-d104768a1214';
+let secondBleServer;
+let secondBleServiceFound;
+let secondSensorCharacteristicFound;
+
 
 function initMap() {
   map = new google.maps.Map(mapContainer, {
@@ -232,40 +240,64 @@ function isWebBluetoothEnabled() {
 }
 
 function connectToDevice() {
+  let deviceName;
   navigator.bluetooth.requestDevice({
-    filters: [{name: deviceName}],
-    optionalServices: [bleService]
+    filters: [{name: firstDeviceName}, {name: secondDeviceName}],
+    optionalServices: [firstBleService, secondBleService]
 })
 .then(device => {
   console.log('Device Selected:', device.name);
+  deviceName = device.name;
+  console.log(device.name)
   bleStateContainer.innerHTML = 'Connected to device ' + device.name;
   bleStateContainer.style.color = "#24af37";
   device.addEventListener('gattservicedisconnected', onDisconnected);
+  console.log(deviceName)
   return device.gatt.connect();
 })
 .then(gattServer => {
-  bleServer = gattServer;
-  console.log("Connected to GATT Server");
-  return bleServer.getPrimaryService(bleService);
+  console.log(deviceName)
+  if (deviceName === 'ESP32') {
+    firstBleServer = gattServer;
+    console.log("Connected to GATT Server");
+    return firstBleServer.getPrimaryService(firstBleService);
+  }
+  else if (deviceName === 'ESP33') {
+    secondBleServer = gattServer;
+    console.log("Connected to GATT Server");
+    return secondBleServer.getPrimaryService(secondBleService);
+  }
 })
 .then(service => {
-  bleServiceFound = service;
-  console.log("Service discovered:", service.uuid);
-  return service.getCharacteristic(sensorCharacteristic);
+  console.log(deviceName)
+  if (deviceName === 'ESP32') {
+    firstBleServiceFound = service;
+    console.log("Service discovered:", service.uuid);
+    return service.getCharacteristic(firstSensorCharacteristic);
+  }
+  else if (deviceName === 'ESP33'){
+    secondBleServiceFound = service;
+    console.log("Service discovered:", service.uuid);
+    return service.getCharacteristic(secondSensorCharacteristic);
+  }
 })
 .then(characteristic => {
-  console.log("Characteristic discovered:", characteristic.uuid);
-  sensorCharacteristicFound = characteristic;
-  //characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
-  characteristic.startNotifications();
-  console.log("Notifications Started.");
-  return characteristic.readValue();
-})
-.then(value => {
-  // console.log("Read value: ", value);
-  // const decodedValue = new TextDecoder().decode(value);
-  // console.log("Decoded value: ", decodedValue);
-  // retrievedValue.innerHTML = decodedValue;
+  if (deviceName === 'ESP32') {
+    console.log("Characteristic discovered:", characteristic.uuid);
+    firstSensorCharacteristicFound = characteristic;
+    //characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
+    // characteristic.startNotifications();
+    // console.log("Notifications Started.");
+    // return characteristic.readValue();
+  }
+  else if (deviceName === 'ESP33') {
+    console.log("Characteristic discovered:", characteristic.uuid);
+    secondSensorCharacteristicFound = characteristic;
+    //characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
+    // characteristic.startNotifications();
+    // console.log("Notifications Started.");
+    // return characteristic.readValue();
+  }
 })
 }
 
@@ -284,45 +316,56 @@ function onDisconnected(event){
 // }
 
 function writeOnCharacteristic(value){
-  if (bleServer && bleServer.connected) {
-    bleServiceFound.getCharacteristic(ledCharacteristic)
-     .then(characteristic => {
-        console.log("Found the LED characteristic: ", characteristic.uuid);
-        const data = new Uint8Array([value]);
-        return characteristic.writeValue(data);
+  if (firstBleServer || secondBleServer) {
+    if (firstBleServer && firstBleServer.connected) {
+      firstBleServiceFound.getCharacteristic(firstLedCharacteristic)
+       .then(characteristic => {
+          console.log("Found the LED characteristic: ", characteristic.uuid);
+          const data = new Uint8Array([value]);
+          return characteristic.writeValue(data);
+        })
+        .then(() => {
+          latestValueSent.innerHTML = value;
+          console.log("Value written to LEDcharacteristic:", value);
+        })
+    } 
+    // if (!secondBleServer.connected) console.log('server not connected')
+    if (secondBleServer && secondBleServer.connected){
+      // if (!secondBleServer) return
+      secondBleServiceFound.getCharacteristic(secondLedCharacteristic)
+       .then(characteristic => {
+          console.log("Found the LED characteristic: ", characteristic.uuid);
+          const data = new Uint8Array([value]);
+          return characteristic.writeValue(data);
+        })
+        .then(() => {
+          latestValueSent.innerHTML = value;
+          console.log("Value written to LEDcharacteristic:", value);
       })
-      .then(() => {
-        latestValueSent.innerHTML = value;
-        console.log("Value written to LEDcharacteristic:", value);
-    })
-  } else {
+    }
+  }
+  else {
     console.error ("Bluetooth is not connected. Cannot write to characteristic.")
     window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
-}
+  }
 }
 
 function disconnectDevice() {
   console.log("Disconnect Device.");
-  if (bleServer && bleServer.connected) {
-      if (sensorCharacteristicFound) {
-          sensorCharacteristicFound.stopNotifications()
-              .then(() => {
-                  console.log("Notifications Stopped");
-                  return bleServer.disconnect();
-              })
-              .then(() => {
-                  console.log("Device Disconnected");
-                  bleStateContainer.innerHTML = "Device Disconnected";
-                  bleStateContainer.style.color = "#d13a30";
-
-              })
-              .catch(error => {
-                  console.log("An error occurred:", error);
-              });
-      } else {
-          console.log("No characteristic found to disconnect.");
-      }
-  } else {
+  if (firstBleServer && firstBleServer.connected) {
+    firstBleServer.disconnect();
+    console.log("Device Disconnected");
+    bleStateContainer.innerHTML = "Device Disconnected";
+    bleStateContainer.style.color = "#d13a30";     
+  }  
+  if (!secondBleServer) return
+  else if (secondBleServer && secondBleServer.connected) {
+    secondBleServer.disconnect();
+    console.log("Device Disconnected");
+    bleStateContainer.innerHTML = "Device Disconnected";
+    bleStateContainer.style.color = "#d13a30";     
+  }
+  else {
       // Throw an error if Bluetooth is not connected
       console.error("Bluetooth is not connected.");
       window.alert("Bluetooth is not connected.")
@@ -340,7 +383,7 @@ disconnectButton.onclick = () => {
 }
 
 onButton.onclick = () => {
-  writeOnCharacteristic(textField.value);
+  writeOnCharacteristic(directionDictionary[textField.value.toUpperCase()]);
 }
 
 function WaitForDirections(data, step = 0){
@@ -394,7 +437,7 @@ function WaitForDirections(data, step = 0){
 }
   
 const fetchConfig = async () => {
-    const response = await fetch(`https://notegot.dk/route?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
+    const response = await fetch(`https://notegot.dk:5501/route?destination=${destinationInput.value}&mode=walking&origin=${originInput.value}&key=AIzaSyB8xI3vA3bcGOo7cNG7SWy6GQyIDGt6HcE`);
     return await response.json();
   }
 
