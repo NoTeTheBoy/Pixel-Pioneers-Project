@@ -63,13 +63,14 @@ const bleStateContainer = document.getElementById("ble-state");
 const directionDictionary = {
   TURN_LEFT: 1,
   TURN_SLIGHT_LEFT: 2,
-  "TURN-SHARP_LEFT": 3,
+  TURN_SHARP_LEFT: 3,
   FORK_LEFT: 4,
   TURN_RIGHT: 5,
   TURN_SLIGHT_RIGHT: 6,
   TURN_SHARP_RIGHT: 7,
   FORK_RIGHT: 8,
-  STRAIGHT: 9,
+  END: 9,
+  STRAIGHT: undefined,
 };
 // Note: This example requires that you consent to location sharing when
 // prompted by your browser. If you see the error "The Geolocation service
@@ -460,7 +461,12 @@ function WaitForDirections(data, step = 0) {
               if (distance.value < 10) {
                 console.log(data[step].maneuver);
                 console.log(directionDictionary[data[step].maneuver]);
-                if (data[step].maneuver === undefined) {
+                if (step === data.length - 1){
+                  writeOnCharacteristic(
+                    [directionDictionary['END']]
+                  )
+                }
+                else if (data[step].maneuver === undefined) {
                   writeOnCharacteristic(0);
                 } else {
                   writeOnCharacteristic(
@@ -531,6 +537,8 @@ async function GetDirections() {
     }
     stepData.push({ lat: lat, lng: lng, maneuver: maneuver });
   }
+  const endLocation = data.routes[0].legs[0].end_location
+  stepData.push(endLocation);
   console.log(stepData);
 
   WaitForDirections(stepData);
