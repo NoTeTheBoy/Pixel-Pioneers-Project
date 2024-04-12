@@ -418,7 +418,17 @@ disconnectButton.onclick = () => {
 };
 
 onButton.onclick = () => {
-  writeOnCharacteristic(directionDictionary[textField.value.toUpperCase()]);
+  if (textField.value === 1){
+    writeOnCharacteristic(1);
+  }
+  if (textField.value === 2){
+    writeOnCharacteristic(5);
+  }
+  if (textField.value === 3){
+    writeOnCharacteristic(9);
+  }
+
+  // writeOnCharacteristic(directionDictionary[textField.value.toUpperCase()]);
 };
 
 function WaitForDirections(data, step = 0) {
