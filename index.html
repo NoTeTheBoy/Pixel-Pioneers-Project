@@ -9,19 +9,10 @@
 </head>
 <body>
     <header>
-        <div class="connect-container">
-            <button id="connect-ble-button">Connect to BLE Device</button>
-            <button id="disconnect-ble-button">Disconnect BLE Device</button>
-        </div>
-        <p>BLE state: <strong><span id="ble-state">Disconnected</span></strong></p>
-        </div>
-        <div class="on-off-container">
-            <button id="on-button">Send</button>
-            <input type="text" id="text-field" placeholder="type here"></input>
-        </div>
-        <p>Last value sent: <span id="value-sent"></span></p>
+        <h1>Pixel-Pioneers</h1>        
     </header>
     <nav>
+        <h2>Navigation</h2>
         <div class="input-container">
             <label for="origin-input">Origin:</label>
             <input type="text" name="origin-input" id="origin-input">
@@ -32,10 +23,26 @@
         </div>
         <button id="directions-button">Get Directions</button>
         <button id="cancel-directions">Cancel Directions</button>
+        <div></div>
     </nav>
     <main>
         <div id="map">
         </div>
     </main>
+    <aside>
+        <h2>Bluetooth</h2>
+        <div class="connect-container">
+            <button id="connect-ble-button">Connect to BLE Device</button>
+            <p>BLE state: <strong><span id="ble-state">Disconnected</span></strong></p>
+            <button id="disconnect-ble-button">Disconnect BLE Device</button>
+        </div>
+        
+        <div class="on-off-container">
+            <button id="on-button">Send</button>
+            <input type="text" id="text-field" placeholder="type here"></input>
+        </div>
+        <p>Last value sent: <span id="value-sent"></span></p>
+        </div>
+    </aside>
 </body>
 </html>

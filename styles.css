@@ -13,22 +13,93 @@ html, body {
 body {
     display: grid;
     grid-template-areas: 
-    'header header'
-    'nav main';
+    'header header header'
+    'nav main aside';
     grid-template-columns: auto 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
     font-family: Arial, Helvetica, sans-serif;
     margin: 0;
     ;
-
+    
+    h2 {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
 
     > header {
-        display: grid;
-        grid-auto-flow: column;
-        grid-template-columns: auto;
         grid-area: header;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: lightcoral;
+    }
+
+    > nav {
+        display: grid;
+        grid-area: nav;
+        justify-content: center;
+        align-items: start;
+        gap: 1rem;
+        grid-template-rows: auto auto auto auto 1fr;
+        background-color: brown;
+        width: var(--navWidth);
+        height: auto;
+        padding: 1rem 1rem;
+
+        
+
+        > div {
+            color: #ffffff;
+        }
+
+        input {
+            height: 1.5rem;
+            /* width: auto; */
+            border-radius: 25rem;
+            margin: 0;
+            border: 0;
+            padding-left: 0.5rem;
+        }
+
+        button {
+            margin: 0.5rem 0;
+            height: 1.25rem;
+            border-radius: 25rem;
+            width: 100%;
+            border: 0;
+        }
+
+        button:hover {
+            background-color: grey;
+        }
+    }
+
+    > main {
+        /* display: flex; */
+        grid-area: main;
+        background-color: aqua;
+        
+        #map {
+            height: calc(100vh - 80px);
+            width: calc(100vw - 340px);
+        }
+    }
+
+    > aside {
+        display: grid;
+        /* grid-auto-flow: row; */
+        grid-template-rows: auto 1fr;
+        grid-area: aside;
+        gap: 20px;
         height: var(--headerHeight);
         background-color: gray;
+        width: 150px;
+        height: 100%;
+        padding: 1rem 0;
         
         p {
             margin: 0;
@@ -48,16 +119,17 @@ body {
         }
 
         .connect-container {
-            gap: 5px;
+            gap: 10px;
             button {
                 border: 0;
                 padding: 0;
-                width: 6.2em;
+                width: 6.5rem;
                 border-radius: 0.3em;
             }        
         }
 
         .value-container {
+            display: none;
             align-items: start;
             padding-top: 5px;
 
@@ -68,6 +140,7 @@ body {
         }
 
         .on-off-container {
+            display: none;
             gap: 5px;
             button {
                 width: 3rem;
@@ -75,54 +148,10 @@ body {
             }
         }
 
-
-    }
-
-    > nav {
-        display: grid;
-        grid-area: nav;
-        justify-content: center;
-        align-items: start;
-        gap: 2rem;
-        grid-template-rows: auto auto 1fr;
-        background-color: brown;
-        width: var(--navWidth);
-        height: auto;
-        padding: 1rem 1rem;
-
-        > div {
-            color: #ffffff;
+        > p {
+            display: none;
         }
 
-        input {
-            height: 1.5rem;
-            /* width: auto; */
-            border-radius: 25rem;
-            margin: 0;
-            border: 0;
-            padding-left: 0.5rem;
-        }
 
-        > button {
-            height: 1.25rem;
-            border-radius: 25rem;
-            border: 0;
-            margin: 0;
-        }
-
-        button:hover {
-            background-color: grey;
-        }
-    }
-
-    > main {
-        /* display: flex; */
-        grid-area: main;
-        background-color: aqua;
-        
-        #map {
-            height: calc(100vh - 80px);
-            width: calc(100vw - 100px);
-        }
     }
 }
