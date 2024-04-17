@@ -49,9 +49,10 @@ const mapContainer = document.getElementById("map");
 const inputBox = document.getElementById("search-bar");
 const directionsButton = document.getElementById("directions-button");
 const cancelDirectionsButton = document.getElementById("cancel-directions");
+const getOriginButton = document.getElementById("get-origin");
 const originInput = document.getElementById("origin-input");
-const originSearchBox = new google.maps.places.SearchBox(originInput);
 const destinationInput = document.getElementById("destination-input");
+const originSearchBox = new google.maps.places.SearchBox(originInput);
 const destinationSearchBox = new google.maps.places.SearchBox(destinationInput);
 const connectButton = document.getElementById("connect-ble-button");
 const disconnectButton = document.getElementById("disconnect-ble-button");
@@ -77,6 +78,11 @@ const directionDictionary = {
 // failed.", it means you probably did not give permission for the browser to
 // locate you.
 let map, infoWindow, directionsService, directionsRenderer, gettingDirections;
+
+let originMarkers = [];
+let destinationMarkers = [];
+
+directionsRenderer = new google.maps.DirectionsRenderer();
 
 let firstDeviceName = "ESP32Right";
 let firstBleService = "19b10000-e8f2-537e-4f6c-d104768a1214";
@@ -143,15 +149,14 @@ function initAutocomplete() {
 
   //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
   // Bias the SearchBox results towards current map's viewport.
-  map.addListener("bounds_changed", () => {
-    originSearchBox.setBounds(map.getBounds());
-  });
-  map.addListener("bounds_changed", () => {
-    destinationSearchBox.setBounds(map.getBounds());
-  });
+  // map.addListener("bounds_changed", () => {
+  //   originSearchBox.setBounds(map.getBounds());
+  // });
+  // map.addListener("bounds_changed", () => {
+  //   destinationSearchBox.setBounds(map.getBounds());
+  // });
 
-  let originMarkers = [];
-  let destinationMarkers = [];
+
 
   // Listen for the event fired when the user selects a prediction and retrieve
   // more details for that place.
@@ -254,7 +259,21 @@ function initAutocomplete() {
 
 cancelDirectionsButton.onclick = () => {
   gettingDirections = false;
+  console.log('directions canceled')
+  window.alert('Directions have been canceled')
 };
+
+getOriginButton.onclick = () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        originInput.value = `${pos.lat}, ${pos.lng}`;
+      })}
+}
 
 function isWebBluetoothEnabled() {
   if (!navigator.bluetooth) {
@@ -504,7 +523,7 @@ async function GetDirections() {
   gettingDirections = true;
   console.log("Test GetDirections");
   directionsService = new google.maps.DirectionsService();
-  directionsRenderer = new google.maps.DirectionsRenderer();
+  
   directionsRenderer.setMap(map);
   let directions;
 
@@ -513,6 +532,17 @@ async function GetDirections() {
     destination: destinationInput.value,
     travelMode: "WALKING",
   };
+  
+  // Clear out the old markers.
+  originMarkers.forEach((marker) => {
+    marker.setMap(null);
+  });
+  originMarkers = [];
+
+  destinationMarkers.forEach((marker) => {
+    marker.setMap(null);
+  });
+  destinationMarkers = [];
 
   directionsService.route(request, function (result, status) {
     if (status === "OK") {
@@ -520,6 +550,7 @@ async function GetDirections() {
       return (directions = result);
     } else console.log("Error");
   });
+
 
   const data = await fetchConfig();
   const steps = data.routes[0].legs[0].steps;

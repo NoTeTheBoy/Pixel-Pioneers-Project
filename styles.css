@@ -1,6 +1,7 @@
 :root {
     --headerHeight: 80px;
-    --navWidth: 10rem;
+    --navWidth: 13rem;
+    --asideWidth: 150px;
 }
 
 html, body {
@@ -28,6 +29,7 @@ body {
         border: 1px;
         border-style: solid;
         background-color: white;
+        cursor: pointer;
         /* color: white; */
     }
 
@@ -50,6 +52,7 @@ body {
         display: flex;
         align-items: center;
         justify-content: center;
+        height: var(--headerHeight);
         /* background-color: #fc3030; */
         /* background-color:#bfd2e0; */
 
@@ -70,24 +73,40 @@ body {
         height: auto;
         padding: 1rem 1rem;
 
+        .inputs {
+            display: grid;
+            grid-template-columns: auto auto;
+            grid-template-rows: auto;
+            column-gap: 2px;
+
+            > button {
+                transform: translateY(50%);
+                width: 3rem;
+                height: 1.5rem;
+                border-radius: 1rem;
+            }
+            
+            input {
+                height: 1.5rem;
+                /* width: auto; */
+                border-radius: 25rem;
+                margin: 0;
+                border: 1px;
+                border-style: solid;
+                border-color: #424242;
+                padding-left: 0.5rem;
+                /* background-color: #424242;
+                color: white; */
+            }
+
+        }
+
         
 
         > div {
             color: black;
         }
 
-        input {
-            height: 1.5rem;
-            /* width: auto; */
-            border-radius: 25rem;
-            margin: 0;
-            border: 1px;
-            border-style: solid;
-            border-color: #424242;
-            padding-left: 0.5rem;
-            /* background-color: #424242;
-            color: white; */
-        }
 
         button {
             margin: 0.5rem 0;
@@ -105,8 +124,8 @@ body {
         background-color: aqua;
         
         #map {
-            height: calc(100vh - 80px);
-            width: calc(100vw - 340px);
+            height: calc(100vh - var(--headerHeight));
+            width: calc(100vw - var(--asideWidth) - var(--navWidth) - 2rem);
         }
     }
 
@@ -116,9 +135,8 @@ body {
         grid-template-rows: auto 1fr;
         grid-area: aside;
         gap: 20px;
-        height: var(--headerHeight);
         background-color: #eeeeee;;
-        width: 150px;
+        width: var(--asideWidth);
         height: 100%;
         padding: 1rem 0;
         
